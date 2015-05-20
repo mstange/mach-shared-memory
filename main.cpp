@@ -10,6 +10,8 @@
 #include <unistd.h>
 #include <iostream>
 
+// Most of the code here was taken from http://www.foldr.org/~michaelw/log/computers/macosx/task-info-fun-with-mach .
+
 #define CHECK_MACH_ERROR(err, msg)                                      \
     if (err != KERN_SUCCESS) {                                          \
         mach_error (msg, err);                                          \

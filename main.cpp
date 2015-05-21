@@ -58,10 +58,6 @@ CreateThePort(mach_vm_address_t& child_address)
 
   buf[0] = 42;
 
-  printf("address: %p\n", reinterpret_cast<int*>(static_cast<uintptr_t>(address)));
-  printf("child_address: %p\n", reinterpret_cast<int*>(static_cast<uintptr_t>(child_address)));
-
-  printf("create port %x\n", port);
   return true;
 }
 
@@ -135,14 +131,14 @@ recv_port (mach_port_t recv_port, mach_port_t *port)
 static void
 RunChildProcess(int aSourceFromParent)
 {
-  std::cout << "Running the child process" << std::endl;
+  std::cout << "[Child] Running the child process" << std::endl;
   mach_vm_address_t child_address;
   size_t numRead = read(aSourceFromParent, &child_address, sizeof(child_address));
   if (numRead > 0) {
-    std::cout << "Read from parent: " << reinterpret_cast<int*>(static_cast<uintptr_t>(child_address)) << std::endl;
+    std::cout << "[Child] Read from parent: " << reinterpret_cast<int*>(static_cast<uintptr_t>(child_address)) << " - content: " << *reinterpret_cast<int*>(static_cast<uintptr_t>(child_address)) << std::endl;
 
   } else {
-    std::cout << "Nothing to read" << std::endl;
+    std::cout << "[Child] Nothing to read" << std::endl;
   }
 
 }
@@ -150,12 +146,12 @@ RunChildProcess(int aSourceFromParent)
 static void
 RunParentProcess(pid_t aChildProcessPID, int aSinkToChild)
 {
-  std::cout << "Creating a port in the parent process" << std::endl;
+  std::cout << "[Parent] Creating a port in the parent process" << std::endl;
   mach_vm_address_t child_address;
   if (!CreateThePort(child_address)) {
-    std::cout << "Failed!" << std::endl;
+    std::cout << "[Parent] Port creation failed!" << std::endl;
   } else {
-    std::cout << "Succeeded! with address " << reinterpret_cast<int*>(static_cast<uintptr_t>(child_address)) << " and content " << *reinterpret_cast<int*>(static_cast<uintptr_t>(child_address)) << std::endl;
+    std::cout << "[Parent] Created a shared memory buffer with child address " << reinterpret_cast<int*>(static_cast<uintptr_t>(child_address)) << " and content " << *reinterpret_cast<int*>(static_cast<uintptr_t>(child_address)) << std::endl;
   }
   write(aSinkToChild, &child_address, sizeof(child_address));
 }

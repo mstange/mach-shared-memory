@@ -35,8 +35,6 @@ CreateThePort(mach_vm_address_t& child_address)
     return false;
   }
 
-
-
   memory_object_size_t memoryObjectSize = round_page(size);
 
   kr = mach_make_memory_entry_64(mach_task_self(), &memoryObjectSize, address, VM_PROT_DEFAULT, &port, MACH_PORT_NULL);
@@ -47,7 +45,11 @@ CreateThePort(mach_vm_address_t& child_address)
 
   vm_prot_t vmProtection = VM_PROT_READ | VM_PROT_WRITE;
 
-  kr = mach_vm_map(child_task, &child_address, round_page(size), 0, VM_FLAGS_ANYWHERE,
+  // Choose an address that will be valid in the child process and point to our buffer.
+  // child_address must not be dereferenced in the parent process.
+  child_address = address + 0x10000;
+
+  kr = mach_vm_map(child_task, &child_address, round_page(size), 0, 0,
                   port, 0, false, vmProtection, vmProtection, VM_INHERIT_NONE);
   if (kr != KERN_SUCCESS) {
     printf("Failed to mach_vm_map (%zu bytes). %s (%x)\n", size, mach_error_string(kr), kr);
@@ -151,7 +153,7 @@ RunParentProcess(pid_t aChildProcessPID, int aSinkToChild)
   if (!CreateThePort(child_address)) {
     std::cout << "[Parent] Port creation failed!" << std::endl;
   } else {
-    std::cout << "[Parent] Created a shared memory buffer with child address " << reinterpret_cast<int*>(static_cast<uintptr_t>(child_address)) << " and content " << *reinterpret_cast<int*>(static_cast<uintptr_t>(child_address)) << std::endl;
+    std::cout << "[Parent] Created a shared memory buffer with child address " << reinterpret_cast<int*>(static_cast<uintptr_t>(child_address)) << std::endl;
   }
   write(aSinkToChild, &child_address, sizeof(child_address));
 }
